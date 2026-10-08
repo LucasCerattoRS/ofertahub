@@ -11,6 +11,8 @@ Pausado aguardando liberação das credenciais da Amazon Product Advertising API
 ### Fase 1 — Cérebro
 - [`gerente_ia.py`](src/gerente_ia.py): fórmula `Score = (Wp·P) + (Wa·A) + (Wv·log₁₀V) − C_penalidade` (pesos 40/40/4).
 - Penalidades dinâmicas: volatilidade >30% no histórico (−8), histórico <3 registros (−3).
+  O histórico é contado em **dias** (último preço de cada dia): com o timer a cada 30 min, contar linhas
+  cruas fazia "10 registros" valerem 5 horas (corrigido em 08/10/2026, `tests/test_historico.py`).
 - Pré-filtros: desconto ≥20%, nota ≥4.0, ≥50 avaliações, blacklist de marcas.
 - [`mock_api.py`](src/mock_api.py) com 14 produtos reais da Amazon BR cobrindo todos os caminhos de triagem.
 

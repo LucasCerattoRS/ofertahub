@@ -142,10 +142,18 @@ def registrar_preco(asin: str, preco: float) -> None:
 
 
 def get_historico_precos(asin: str, limite: int = 10) -> list[float]:
+    """Um preço por DIA (o último coletado no dia), do dia mais recente para trás.
+
+    O timer roda a cada 30 min e cada rodada grava uma linha. Lendo linhas cruas, "os 10
+    últimos" eram só as últimas 5 horas: a penalidade de histórico insuficiente sumia depois
+    de 1h30 e a de volatilidade comparava preços da mesma tarde. Agrupando por dia, 10 = 10 dias.
+    (No SQLite, a coluna `preco` ao lado de MAX() vem da mesma linha do máximo.)
+    """
     with _db() as conn:
         rows = conn.execute(
-            "SELECT preco FROM historico_precos WHERE asin = ? "
-            "ORDER BY coletado_em DESC LIMIT ?",
+            "SELECT date(coletado_em) AS dia, preco, MAX(coletado_em) "
+            "FROM historico_precos WHERE asin = ? "
+            "GROUP BY dia ORDER BY dia DESC LIMIT ?",
             (asin, limite),
         ).fetchall()
     return [r["preco"] for r in rows]
