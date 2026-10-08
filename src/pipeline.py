@@ -12,6 +12,7 @@ from pathlib import Path
 # Garante que os módulos do projeto sejam encontrados independente do cwd
 sys.path.insert(0, str(Path(__file__).parent))
 
+import db
 from gerente_ia import processar_ofertas, exportar_json
 from mock_api import buscar_produtos          # trocar por amazon_api quando PA-API for aprovada
 from disparador_telegram import disparar_ofertas
@@ -28,6 +29,7 @@ _JSON_PATH = Path(__file__).parent / "ofertas_aprovadas.json"
 def etapa_coleta_e_filtragem() -> int:
     """Roda o Gerente IA e persiste o JSON. Retorna qtd de ofertas aprovadas."""
     logger.info("▶ Etapa 1/2 — Coleta e filtragem (Gerente IA)")
+    db.inicializar_banco()   # idempotente; sem isso, banco novo quebra em registrar_preco
     produtos_brutos = buscar_produtos(limite=20)
     logger.info("  Produtos recebidos da API: %d", len(produtos_brutos))
 
