@@ -32,7 +32,7 @@ O **OfertaHub** é um motor de recomendação que aplica uma fórmula de *Score*
                                    │
                 ┌──────────────────┴──────────────────┐
                 │  pipeline.py                        │
-                │  (systemd timer — a cada 60 min)    │
+                │  (systemd timer — a cada 30 min)    │
                 │  1. mock_api / Amazon PA-API        │
                 │  2. gerente_ia → Score + filtros    │
                 │  3. ofertas_aprovadas.json          │
@@ -135,7 +135,7 @@ systemctl --user daemon-reload
 # Bot interativo (polling contínuo)
 systemctl --user enable --now ofertahub-bot.service
 
-# Pipeline periódico (a cada 60 min)
+# Pipeline periódico (a cada 30 min)
 systemctl --user enable --now ofertahub.timer
 
 # Permite que os serviços rodem mesmo com a sessão encerrada
