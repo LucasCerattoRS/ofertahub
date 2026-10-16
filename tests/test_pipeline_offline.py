@@ -27,6 +27,7 @@ if not (_SRC / "config.py").exists():
     sys.modules["config"] = config
 
 import db  # noqa: E402
+import mock_api  # noqa: E402
 import pipeline  # noqa: E402
 
 
@@ -44,7 +45,13 @@ class PipelineOffline(unittest.TestCase):
     def test_coleta_em_banco_novo_nao_quebra(self):
         # Regressão: pipeline.py rodava antes de qualquer inicializar_banco()
         # e caía com "no such table: historico_precos" numa instalação nova.
-        aprovadas = pipeline.etapa_coleta_e_filtragem()
+        # Fonte "real" simulada: mesmos dados do mock, sem a marca de mock
+        # (a trava barra o mock de verdade; ver test_trava_mock.py).
+        def fonte_real(limite=20):
+            return [{k: v for k, v in p.items() if k != "fonte"}
+                    for p in mock_api.buscar_produtos(limite=limite)]
+
+        aprovadas = pipeline.etapa_coleta_e_filtragem(fonte_real)
 
         # mock_api tem 9 produtos aprovados e 4 rejeitados (um por critério).
         self.assertEqual(aprovadas, 9)

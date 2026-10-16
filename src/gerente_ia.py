@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import db
+import trava_fonte
 from config import AFFILIATE_TAG, BLACKLIST, FILTRO, PENALIDADES, SCORE_PESOS
 
 logging.basicConfig(
@@ -198,18 +199,11 @@ def exportar_json(ofertas: list[Oferta], indent: int = 2) -> str:
 def main() -> None:
     db.inicializar_banco()
 
-    try:
-        from config import AMAZON_API
-        if all(AMAZON_API[k] for k in ("access_key", "secret_key", "partner_tag")):
-            from amazon_api import buscar_produtos
-            logger.info("Usando Amazon Product Advertising API real.")
-        else:
-            raise ValueError("Credenciais não configuradas.")
-    except (ImportError, ValueError):
-        from mock_api import buscar_produtos
-        logger.info("Credenciais ausentes — usando mock de dados.")
+    from pipeline import obter_fonte   # falha alto se PA-API ausente; nunca usa mock
+    buscar_produtos = obter_fonte()
 
     produtos_brutos = buscar_produtos(limite=20)
+    trava_fonte.exigir_produtos_reais(produtos_brutos)
     logger.info("Produtos recebidos: %d", len(produtos_brutos))
 
     ofertas = processar_ofertas(produtos_brutos)

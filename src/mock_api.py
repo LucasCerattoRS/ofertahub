@@ -158,6 +158,11 @@ _PRODUTOS_MOCK = [
 ]
 
 
+FONTE_MOCK = "mock"
+ASINS_MOCK = frozenset(p["asin"] for p in _PRODUTOS_MOCK)
+
+
 def buscar_produtos(categoria: str = "geral", limite: int = 20) -> list[dict]:
     """Simula resposta paginada da API retornando produtos brutos."""
-    return random.sample(_PRODUTOS_MOCK, min(limite, len(_PRODUTOS_MOCK)))
+    amostra = random.sample(_PRODUTOS_MOCK, min(limite, len(_PRODUTOS_MOCK)))
+    return [{**p, "fonte": FONTE_MOCK} for p in amostra]

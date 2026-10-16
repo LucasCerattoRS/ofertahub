@@ -18,6 +18,7 @@ from telegram.constants import ParseMode
 from telegram.error import BadRequest, Forbidden, TelegramError
 
 import db
+import trava_fonte
 from config import TELEGRAM_TOKEN
 
 # Regex compilada dos 19 caracteres reservados pelo MarkdownV2.
@@ -122,6 +123,8 @@ async def disparar_ofertas() -> None:
     if not ofertas:
         logger.info("Nenhuma oferta no JSON para disparar.")
         return
+
+    trava_fonte.exigir_ofertas_reais(ofertas)   # nunca publicar ofertas fictícias
 
     total_enviados = 0
 
