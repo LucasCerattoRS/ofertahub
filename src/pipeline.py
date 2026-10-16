@@ -14,8 +14,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import db
 from gerente_ia import processar_ofertas, exportar_json
-from mock_api import buscar_produtos          # trocar por amazon_api quando PA-API for aprovada
 from disparador_telegram import disparar_ofertas
+import trava_fonte
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,11 +26,29 @@ logger = logging.getLogger("pipeline")
 _JSON_PATH = Path(__file__).parent / "ofertas_aprovadas.json"
 
 
-def etapa_coleta_e_filtragem() -> int:
+def obter_fonte():
+    """
+    Devolve buscar_produtos da PA-API real. Sem PA-API configurada (ou sem o
+    módulo amazon_api), levanta PublicacaoBloqueada — NUNCA cai para o mock.
+    """
+    import config
+    trava_fonte.exigir_pa_api_configurada(getattr(config, "AMAZON_API", None))
+    try:
+        from amazon_api import buscar_produtos
+    except ImportError:
+        trava_fonte._bloquear("módulo amazon_api não existe/não importa; "
+                              "não há fonte real de produtos.")
+    return buscar_produtos
+
+
+def etapa_coleta_e_filtragem(buscar_produtos=None) -> int:
     """Roda o Gerente IA e persiste o JSON. Retorna qtd de ofertas aprovadas."""
     logger.info("▶ Etapa 1/2 — Coleta e filtragem (Gerente IA)")
     db.inicializar_banco()   # idempotente; sem isso, banco novo quebra em registrar_preco
+    if buscar_produtos is None:
+        buscar_produtos = obter_fonte()
     produtos_brutos = buscar_produtos(limite=20)
+    trava_fonte.exigir_produtos_reais(produtos_brutos)
     logger.info("  Produtos recebidos da API: %d", len(produtos_brutos))
 
     ofertas = processar_ofertas(produtos_brutos)

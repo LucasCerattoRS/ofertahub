@@ -89,3 +89,16 @@ quem assinou a categoria, sem repetir o mesmo ASIN ao mesmo usuário no mesmo di
    `~/Documentos/ProjeoEmprendimento` e `deploy/revisao.sh` (sem `--clean`).
 4. Opcional: apagar as cópias duplicadas da skill e o `design-system/` se o frontend (Fase 7)
    não for retomado.
+
+
+## Trava anti-mock (16/10/2026, branch `claude/trava-mock-nuvem`)
+
+- Novo `src/trava_fonte.py`: o pipeline levanta `PublicacaoBloqueada` (log CRITICAL) se a fonte
+  for o mock ou se `AMAZON_API` estiver incompleta. `mock_api` marca cada produto com
+  `fonte="mock"`; `disparador_telegram` também recusa JSON com ASIN do mock (arquivo velho).
+- `pipeline.py` e `gerente_ia.main()` não caem mais para o mock. **Efeito em produção após o
+  deploy: o ciclo falha (exit ≠ 0) e nada é publicado até existir `amazon_api.py` + credenciais.**
+  É o comportamento desejado; o `ofertahub.service` aparecerá como failed.
+- Testes: `tests/test_trava_mock.py` (5 casos; falhavam antes da correção). Suíte: 10 testes OK.
+- Não validado: execução real via systemd; PA-API real (`amazon_api.py` não existe).
+- Produção e segredos não foram tocados.
